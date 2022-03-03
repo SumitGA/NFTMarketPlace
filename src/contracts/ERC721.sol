@@ -13,6 +13,9 @@ import './ERC721Metadata.sol';
    */
 
 contract ERC721 {
+
+  event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
   // mapping in solidity creates a hash table of key value pairs
   // mapping from token id to token owner
   mapping(uint256  => address) private _tokenOwner;
@@ -26,9 +29,16 @@ contract ERC721 {
   }
 
   function _mint(address to, uint256 tokenId) internal{
+    // requires that the address is not zero
     require(to != address(0), 'ERC721: minting to the zero address');
+
+    // requires that the token does not alreayd exist
     require(_exists(tokenId) != true, 'ERC721: minting a token that already exists');
+
+    // adding a new address with token id for minting
     _tokenOwner[tokenId] == to;
     _OwnedTokensCount[to] += 1;
+
+    emit Transfer(address(0), to, tokenId);
   }
 }
