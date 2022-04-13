@@ -26,6 +26,9 @@ contract ERC721 {
     // mapping from owner to number of owned tokens
     mapping(address => uint256) private _OwnedTokensCount;
 
+    // mapping from token id to approved addresses
+    mapping(uint256 => address) private _tokenApprovals;
+
     // @notice Count all NTFs assigned to an owner
     /// @dev NFTs assigned to the zero address are cosidered invalid, and this is
     // function throws for queries about the zero address.
@@ -44,7 +47,7 @@ contract ERC721 {
     // about them do throw.
     /// @param _tokenId The identifier for the NFT
     /// @return The address of the owner of the NFT
-    function ownerOf(uint256 _tokenId) external view returns (address) {
+    function ownerOf(uint256 _tokenId) public view returns (address) {
         require(_tokenId != 0, "Token ID cannot be zero");
         return _tokenOwner[_tokenId];
     }
@@ -54,7 +57,7 @@ contract ERC721 {
         return _tokenOwner[tokenId] != address(0);
     }
 
-    function _mint(address to, uint256 tokenId) virtual internal {
+    function _mint(address to, uint256 tokenId) internal virtual {
         // requires that the address is not zero
         require(to != address(0), "ERC721: minting to the zero address");
 
@@ -69,5 +72,34 @@ contract ERC721 {
         _OwnedTokensCount[to] += 1;
 
         emit Transfer(address(0), to, tokenId);
+    }
+
+    function _transferFrom(
+        address _from,
+        address _to,
+        uint256 _tokenId
+    ) internal {
+        require(
+            _to != address(0),
+            "Error - ERC721: transfer to the zero address"
+        );
+        require(
+            ownerOf(_tokenId) == _from,
+            "Trying to transfer a token the address does not owned"
+        );
+
+        _OwnedTokensCount[_from] -= 1;
+        _OwnedTokensCount[_to] += 1;
+        _tokenOwner[_tokenId] == _to;
+
+        emit Transfer(_from, _to, _tokenId);
+    }
+
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _tokenId
+    ) public {
+        _transferFrom(_from, _to, _tokenId);
     }
 }
