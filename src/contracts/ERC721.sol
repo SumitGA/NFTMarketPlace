@@ -28,12 +28,17 @@ contract ERC721 is ERC165, IERC721 {
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    // @notice Count all NTFs assigned to an owner
-    /// @dev NFTs assigned to the zero address are cosidered invalid, and this is
-    // function throws for queries about the zero address.
-    /// @param _owner An address for whom to query the balance
-    /// @return The number of NFTs owned by _owner, possibly zero
-    function balanceOf(address _owner) public override view returns (uint256) {
+    constructor() {
+        _registerInterface(
+            bytes4(
+                keccak256("balanceOf(bytes4)") ^
+                    keccak256("ownerOf(bytes4)") ^
+                    keccak256("transferFrom(bytes4)")
+            )
+        );
+    }
+
+    function balanceOf(address _owner) public view override returns (uint256) {
         require(
             _owner != address(0),
             "Owner query cannot be for the zero address"
@@ -46,7 +51,7 @@ contract ERC721 is ERC165, IERC721 {
     // about them do throw.
     /// @param _tokenId The identifier for the NFT
     /// @return The address of the owner of the NFT
-    function ownerOf(uint256 _tokenId) public override view returns (address) {
+    function ownerOf(uint256 _tokenId) public view override returns (address) {
         require(_tokenId != 0, "Token ID cannot be zero");
         return _tokenOwner[_tokenId];
     }

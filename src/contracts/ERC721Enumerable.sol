@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "./ERC721.sol";
+import "./interfaces/IERC721Enumerable.sol";
 
-contract ERC721Enumerable is ERC721 {
+contract ERC721Enumerable is IERC721Enumerable, ERC721 {
     uint256[] private _allTokens;
 
     // mapping from tokenId to position in _allTokens arrays
@@ -15,10 +16,17 @@ contract ERC721Enumerable is ERC721 {
     // mapping from tokenId index of the owner token lists
     mapping(uint256 => uint256) private _ownedTokensIndex;
 
-    /// @notice Count NFTs tracked by this contract
-    /// @return A count of valid NFTs tracked by this contract, where each one of
-    ///  them has an assigned and queryable owner not equal to the zero address
-    function totalSupply() external view returns (uint256) {
+    constructor() {
+        _registerInterface(
+            bytes4(
+                keccak256("totalSupply(bytes4)") ^
+                    keccak256("tokenByIndex(bytes4)") ^
+                    keccak256("tokenOfOwnerByIndex(bytes4)")
+            )
+        );
+    }
+
+    function totalSupply() external view override returns (uint256) {
         return _allTokens.length;
     }
 
@@ -46,7 +54,12 @@ contract ERC721Enumerable is ERC721 {
         _ownedTokens[to].push(tokenId);
     }
 
-    function tokenByIndex(uint256 index) public view returns (uint256) {
+    function tokenByIndex(uint256 index)
+        public
+        view
+        override
+        returns (uint256)
+    {
         // check for index out of bounds for total supply
         require(index < this.totalSupply(), "global index out of bounds!");
         return _allTokens[index];
@@ -55,10 +68,10 @@ contract ERC721Enumerable is ERC721 {
     function tokenOfOwnerByIndex(address owner, uint256 index)
         public
         view
+        override
         returns (uint256)
     {
-
-      require(index < this.balanceOf(owner), 'owner index is out of bounds');
+        require(index < this.balanceOf(owner), "owner index is out of bounds");
         return _ownedTokens[owner][index];
     }
 }
