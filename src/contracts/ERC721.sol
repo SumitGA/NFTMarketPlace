@@ -1,7 +1,7 @@
 // SPDX-License-Identifieer: MIT
 pragma solidity ^0.8.0;
 
-import "./ERC721Metadata.sol";
+import './ERC165.sol';
 
 /**
   bulding out the minting function
@@ -12,10 +12,17 @@ import "./ERC721Metadata.sol";
     e. emit an event when a token is transfered - contract address, where it is transfered from, to, token id
    */
 
-contract ERC721 {
+// Implementing ERC165 interface for compilance issues with ERC721
+contract ERC721 is ERC165 {
     event Transfer(
         address indexed from,
         address indexed to,
+        uint256 indexed tokenId
+    );
+
+    event approval(
+        address indexed owner,
+        address indexed approved,
         uint256 indexed tokenId
     );
 
@@ -28,6 +35,9 @@ contract ERC721 {
 
     // mapping from token id to approved addresses
     mapping(uint256 => address) private _tokenApprovals;
+
+    // Mapping from owner to operator approvals
+    mapping(address => mapping(address => bool)) private _operatorApprovals;
 
     // @notice Count all NTFs assigned to an owner
     /// @dev NFTs assigned to the zero address are cosidered invalid, and this is
@@ -100,6 +110,44 @@ contract ERC721 {
         address _to,
         uint256 _tokenId
     ) public {
+        require(
+            isApprovedOrOwner(msg.sender, _tokenId),
+            "ERC721: must have approved or owner status for the token"
+        );
         _transferFrom(_from, _to, _tokenId);
+    }
+
+    // 1. require that the person approving is the owner
+    // 2. we are approving an address to a token (tokenId)
+    // 3. require that we cant approve sending tokens of owner to the owner
+    // 4. update the mapping of the approval addresses
+    function approve(address _to, uint256 tokenId) public {
+        address owner = ownerOf(tokenId);
+        require(_to != owner, "Error - approval to current owner");
+        require(
+            msg.sender == owner,
+            "Current caller is not the owner of the token"
+        );
+        _tokenApprovals[tokenId] == _to;
+
+        emit approval(owner, _to, tokenId);
+    }
+
+    function isApprovedForAll(address owner, address operator) public view  returns (bool) {
+        return _operatorApprovals[owner][operator];
+    }
+
+    function getApproved(uint256 tokenId) public view returns(address) {
+        return _tokenApprovals[tokenId];
+    }
+
+    function isApprovedOrOwner(address spender, uint256 tokenId)
+        internal
+        view
+        returns (bool)
+    {
+        require(_exists(tokenId), "Token does not exists");
+        address owner = ownerOf(tokenId);
+        return (spender == owner || isApprovedForAll(owner, spender) || getApproved(tokenId) == spender);
     }
 }
