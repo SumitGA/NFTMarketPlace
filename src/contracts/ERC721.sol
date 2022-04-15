@@ -1,7 +1,8 @@
 // SPDX-License-Identifieer: MIT
 pragma solidity ^0.8.0;
 
-import './ERC165.sol';
+import "./ERC165.sol";
+import "./interfaces/IERC721.sol";
 
 /**
   bulding out the minting function
@@ -13,19 +14,7 @@ import './ERC165.sol';
    */
 
 // Implementing ERC165 interface for compilance issues with ERC721
-contract ERC721 is ERC165 {
-    event Transfer(
-        address indexed from,
-        address indexed to,
-        uint256 indexed tokenId
-    );
-
-    event approval(
-        address indexed owner,
-        address indexed approved,
-        uint256 indexed tokenId
-    );
-
+contract ERC721 is ERC165, IERC721 {
     // mapping in solidity creates a hash table of key value pairs
     // mapping from token id to token owner
     mapping(uint256 => address) private _tokenOwner;
@@ -44,7 +33,7 @@ contract ERC721 is ERC165 {
     // function throws for queries about the zero address.
     /// @param _owner An address for whom to query the balance
     /// @return The number of NFTs owned by _owner, possibly zero
-    function balanceOf(address _owner) external view returns (uint256) {
+    function balanceOf(address _owner) public override view returns (uint256) {
         require(
             _owner != address(0),
             "Owner query cannot be for the zero address"
@@ -57,7 +46,7 @@ contract ERC721 is ERC165 {
     // about them do throw.
     /// @param _tokenId The identifier for the NFT
     /// @return The address of the owner of the NFT
-    function ownerOf(uint256 _tokenId) public view returns (address) {
+    function ownerOf(uint256 _tokenId) public override view returns (address) {
         require(_tokenId != 0, "Token ID cannot be zero");
         return _tokenOwner[_tokenId];
     }
@@ -109,7 +98,7 @@ contract ERC721 is ERC165 {
         address _from,
         address _to,
         uint256 _tokenId
-    ) public {
+    ) public override {
         require(
             isApprovedOrOwner(msg.sender, _tokenId),
             "ERC721: must have approved or owner status for the token"
@@ -130,14 +119,18 @@ contract ERC721 is ERC165 {
         );
         _tokenApprovals[tokenId] == _to;
 
-        emit approval(owner, _to, tokenId);
+        emit Approval(owner, _to, tokenId);
     }
 
-    function isApprovedForAll(address owner, address operator) public view  returns (bool) {
+    function isApprovedForAll(address owner, address operator)
+        public
+        view
+        returns (bool)
+    {
         return _operatorApprovals[owner][operator];
     }
 
-    function getApproved(uint256 tokenId) public view returns(address) {
+    function getApproved(uint256 tokenId) public view returns (address) {
         return _tokenApprovals[tokenId];
     }
 
@@ -148,6 +141,8 @@ contract ERC721 is ERC165 {
     {
         require(_exists(tokenId), "Token does not exists");
         address owner = ownerOf(tokenId);
-        return (spender == owner || isApprovedForAll(owner, spender) || getApproved(tokenId) == spender);
+        return (spender == owner ||
+            isApprovedForAll(owner, spender) ||
+            getApproved(tokenId) == spender);
     }
 }
