@@ -5,11 +5,10 @@ import "./interfaces/IERC165.sol";
 
 // Setting up an interface support for all the ERC standard contracts to follow along with
 contract ERC165 is IERC165 {
-
     mapping(bytes4 => bool) private _supportedInterfaces;
 
     constructor() {
-      _registerInterface(bytes4(keccak256('supportsInterface(bytes4)')));
+        _registerInterface(bytes4(keccak256("supportsInterface(bytes4)")));
     }
 
     function supportsInterface(bytes4 interfaceID)
